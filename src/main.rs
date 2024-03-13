@@ -9,7 +9,9 @@ use clap::Parser;
 struct Args {
     /// Name of file
     #[clap(short, long)]
-    input_file : PathBuf
+    input_file : PathBuf,
+    #[clap(short, long)]
+    extract_json : bool
 }
 
 enum GLTFChunkTypes {
@@ -44,7 +46,6 @@ fn parse_gltf_file (bs : &Vec<u8>) -> GLTFFile {
     let mut chunks : Vec<GLTFChunk> = Vec::new();
     index += 12;
     while index < (header.length as usize) {
-        println!("index {}", index);
         let chunk : GLTFChunk = parse_gltf_chunk(bs[index..].into());
         index += (chunk.chunk_length as usize)+8;
         chunks.push(chunk);
@@ -89,6 +90,8 @@ fn main() {
         },
         Err(e) => panic!("{:?}", e),
     }
-    // TODO: Make this useful.
-    println!("{:?}", parse_gltf_file(&buf));
+    let gltf = parse_gltf_file(&buf);
+    if args.extract_json {
+        std::io::stdout().write(&gltf.chunks[0].chunk_data);
+    }
 }
